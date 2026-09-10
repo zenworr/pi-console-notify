@@ -1,0 +1,25 @@
+{
+  "name": "pi-console-notify",
+  "version": "0.1.0",
+  "description": "Route console warnings and errors through Pi's notification UI.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["pi-package"],
+  "scripts": {
+    "test": "node --test index.test.ts"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}
