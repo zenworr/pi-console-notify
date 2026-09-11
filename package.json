@@ -1,7 +1,7 @@
 {
   "name": "pi-console-notify",
-  "version": "0.1.0",
-  "description": "Route console warnings and errors through Pi's notification UI.",
+  "version": "0.2.0",
+  "description": "Route console messages through Pi's notification UI.",
   "type": "module",
   "license": "MIT",
   "keywords": ["pi-package"],

@@ -24,7 +24,6 @@ test("routes console warnings and errors with Node formatting", () => {
 	const parent = session();
 	const originalWarn = console.warn;
 	const originalError = console.error;
-	const originalLog = console.log;
 	parent.start();
 	try {
 		console.warn("Duplicate %s (%d)", "pi-chrome", 2);
@@ -34,12 +33,28 @@ test("routes console warnings and errors with Node formatting", () => {
 			{ message: "Duplicate pi-chrome (2)", type: "warning" },
 			{ message: format(error, { extension: "example" }), type: "error" },
 		]);
-		assert.equal(console.log, originalLog);
 	} finally {
 		parent.stop();
 	}
 	assert.equal(console.warn, originalWarn);
 	assert.equal(console.error, originalError);
+});
+
+test("routes log, info and debug messages and restores each method", () => {
+	const parent = session();
+	const methods = ["log", "info", "debug"] as const;
+	const originals = methods.map((method) => console[method]);
+	parent.start();
+	try {
+		for (const method of methods) console[method]("Message %s", method);
+		assert.deepEqual(parent.notices, methods.map((method) => ({
+			message: `Message ${method}`,
+			type: "info",
+		})));
+	} finally {
+		parent.stop();
+	}
+	methods.forEach((method, index) => assert.equal(console[method], originals[index]));
 });
 
 test("child initialization and shutdown retain the parent sink", () => {
@@ -82,12 +97,12 @@ test("reload routes to the new session without stacking wrappers", () => {
 test("leaves RPC, JSON and print consoles unchanged", () => {
 	for (const mode of ["rpc", "json", "print"] as const) {
 		const other = session(mode);
-		const warn = console.warn;
-		const error = console.error;
+		const methods = ["warn", "error", "log", "info", "debug"] as const;
+		const originals = methods.map((method) => console[method]);
 		other.start();
+		methods.forEach((method, index) => assert.equal(console[method], originals[index]));
 		other.stop();
-		assert.equal(console.warn, warn);
-		assert.equal(console.error, error);
+		methods.forEach((method, index) => assert.equal(console[method], originals[index]));
 		assert.equal(other.notices.length, 0);
 	}
 });

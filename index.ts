@@ -12,18 +12,26 @@ export default function consoleNotify(pi: ExtensionAPI): void {
 		// Child sessions share the console but must not replace the parent UI sink.
 		if (ctx.mode !== "tui" || shared[OWNER_KEY]) return;
 
-		const originalWarn = console.warn;
-		const originalError = console.error;
-		const warn = (...args: unknown[]): void => ctx.ui.notify(format(...args), "warning");
-		const error = (...args: unknown[]): void => ctx.ui.notify(format(...args), "error");
+		const methods = [
+			["warn", "warning"],
+			["error", "error"],
+			["log", "info"],
+			["info", "info"],
+			["debug", "info"],
+		] as const;
 
 		shared[OWNER_KEY] = owner;
-		console.warn = warn;
-		console.error = error;
+		const restorers = methods.map(([method, level]) => {
+			const original = console[method];
+			const wrapped = (...args: unknown[]): void => ctx.ui.notify(format(...args), level);
+			console[method] = wrapped;
+			return () => {
+				if (console[method] === wrapped) console[method] = original;
+			};
+		});
 		restore = () => {
 			if (shared[OWNER_KEY] !== owner) return;
-			if (console.warn === warn) console.warn = originalWarn;
-			if (console.error === error) console.error = originalError;
+			for (const restoreMethod of restorers) restoreMethod();
 			delete shared[OWNER_KEY];
 		};
 	});
